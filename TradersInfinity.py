@@ -59,7 +59,7 @@ async def run_bot():
     print("Bot sedang berjalan...")
     await application.run_polling()
 
-# Fungsi utama untuk inisialisasi
+# Perbaikan event loop
 async def main():
     try:
         await run_bot()  # Jangan gunakan asyncio.run() di dalam async function
