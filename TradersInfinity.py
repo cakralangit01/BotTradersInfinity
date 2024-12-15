@@ -1,5 +1,5 @@
 from telegram.ext import Application, MessageHandler
-from telegram.ext.filters import PHOTO, VIDEO, TEXT, COMMAND, Document
+from telegram.ext.filters import PHOTO, VIDEO, TEXT, COMMAND, DOCUMENT
 from datetime import datetime, time
 import pytz
 import asyncio
@@ -16,7 +16,7 @@ async def check_operating_hours(application):
         end_time = time(0, 0)
         if not (start_time <= now or now < end_time):
             print("Di luar jam operasional. Bot berhenti.")
-            await application.shutdown()
+            await application.shutdown()  # Gunakan await untuk menunggu shutdown
             return
         await asyncio.sleep(60)
 
@@ -54,17 +54,17 @@ async def forward_media(update, context):
 async def run_bot():
     application = Application.builder().token(TOKEN).build()
     application.add_handler(MessageHandler(TEXT & ~COMMAND, forward_text))
-    application.add_handler(MessageHandler(PHOTO | VIDEO | Document.ALL, forward_media))
+    application.add_handler(MessageHandler(PHOTO | VIDEO | DOCUMENT, forward_media))
     asyncio.create_task(check_operating_hours(application))
     print("Bot sedang berjalan...")
     await application.run_polling()
 
 # Perbaikan event loop
-def main():
+async def main():
     try:
-        asyncio.run(run_bot())  # Pastikan event loop tidak bertabrakan
+        await run_bot()  # Jangan gunakan asyncio.run() di dalam async function
     except RuntimeError as e:
         print(f"RuntimeError: {e}")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())  # Memanggil main() menggunakan asyncio.run() untuk menjalankan semuanya
