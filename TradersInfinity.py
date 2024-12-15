@@ -1,80 +1,70 @@
 from telegram.ext import Application, MessageHandler
 from telegram.ext.filters import PHOTO, VIDEO, TEXT, COMMAND, Document
 from datetime import datetime, time
-import asyncio
 import pytz
+import asyncio
 
-# Masukkan token API dari BotFather
 TOKEN = "TOKEN_KAMU"
-CHANNEL_ID = "@Traders_Infinity"  # Ganti dengan username channel kamu
-
-# Tentukan zona waktu WIB
+CHANNEL_ID = "@Traders_Infinity"
 WIB = pytz.timezone("Asia/Jakarta")
 
-# Fungsi untuk mengecek jam operasional
+# Fungsi cek jam operasional
 async def check_operating_hours(application):
     while True:
-        now = datetime.now(WIB).time()  # Dapatkan waktu saat ini dalam zona WIB
-        start_time = time(9, 0)  # 09:00 WIB
-        end_time = time(0, 0)  # 24:00 WIB (tengah malam)
-
-        # Jika di luar jam operasional, bot akan berhenti
+        now = datetime.now(WIB).time()
+        start_time = time(9, 0)
+        end_time = time(0, 0)
         if not (start_time <= now or now < end_time):
-            print("Di luar jam operasional (WIB). Bot akan berhenti.")
-            await application.shutdown()  # Shutdown aplikasi bot
-            return  # Keluar dari fungsi
-        await asyncio.sleep(60)  # Cek setiap 60 detik
+            print("Di luar jam operasional. Bot berhenti.")
+            await application.shutdown()
+            return
+        await asyncio.sleep(60)
 
-# Fungsi untuk meneruskan pesan teks ke channel
+# Fungsi untuk forward pesan teks
 async def forward_text(update, context):
     try:
         message = update.message.text
         await context.bot.send_message(chat_id=CHANNEL_ID, text=message)
-        print(f"Teks diteruskan ke channel: {message}")
+        print(f"Teks diteruskan: {message}")
     except Exception as e:
-        print(f"Error mengirim teks: {e}")
+        print(f"Error kirim teks: {e}")
 
-# Fungsi untuk meneruskan media (gambar, video, dokumen)
+# Fungsi untuk forward media
 async def forward_media(update, context):
     try:
         if update.message.photo:
             photo_file = update.message.photo[-1].file_id
             caption = update.message.caption or ""
             await context.bot.send_photo(chat_id=CHANNEL_ID, photo=photo_file, caption=caption)
-            print("Gambar diteruskan ke channel.")
+            print("Gambar diteruskan.")
         elif update.message.video:
             video_file = update.message.video.file_id
             caption = update.message.caption or ""
             await context.bot.send_video(chat_id=CHANNEL_ID, video=video_file, caption=caption)
-            print("Video diteruskan ke channel.")
+            print("Video diteruskan.")
         elif update.message.document:
             document_file = update.message.document.file_id
             caption = update.message.caption or ""
             await context.bot.send_document(chat_id=CHANNEL_ID, document=document_file, caption=caption)
-            print("Dokumen diteruskan ke channel.")
+            print("Dokumen diteruskan.")
     except Exception as e:
-        print(f"Error mengirim media: {e}")
+        print(f"Error kirim media: {e}")
 
-# Fungsi utama untuk menjalankan bot
+# Fungsi utama
 async def run_bot():
     application = Application.builder().token(TOKEN).build()
-
-    # Tambahkan handler untuk teks
     application.add_handler(MessageHandler(TEXT & ~COMMAND, forward_text))
-
-    # Tambahkan handler untuk media
-    media_filter = PHOTO | VIDEO | Document.ALL
-    application.add_handler(MessageHandler(media_filter, forward_media))
-
-    # Jalankan pengecekan jam operasional secara paralel
+    application.add_handler(MessageHandler(PHOTO | VIDEO | Document.ALL, forward_media))
     asyncio.create_task(check_operating_hours(application))
-
     print("Bot sedang berjalan...")
     await application.run_polling()
 
-# Fungsi utama untuk inisialisasi
-async def main():
-    await run_bot()
+# Perbaikan event loop
+def main():
+    try:
+        asyncio.run(run_bot())  # Pastikan event loop tidak bertabrakan
+    except RuntimeError as e:
+        print(f"RuntimeError: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
