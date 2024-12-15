@@ -1,6 +1,5 @@
 from telegram.ext import Application, MessageHandler
-from telegram.ext.filters import PHOTO, VIDEO, TEXT, COMMAND
-from telegram import ContentType
+from telegram.ext.filters import PHOTO, VIDEO, TEXT, COMMAND, Document
 from datetime import datetime, time
 import pytz
 import asyncio
@@ -56,7 +55,7 @@ async def forward_media(update, context):
 async def run_bot():
     application = Application.builder().token(TOKEN).build()
     application.add_handler(MessageHandler(TEXT & ~COMMAND, forward_text))
-    application.add_handler(MessageHandler(PHOTO | VIDEO | ContentType.DOCUMENT, forward_media))
+    application.add_handler(MessageHandler(PHOTO | VIDEO | Document.ALL, forward_media))
     asyncio.create_task(check_operating_hours(application))
     print("Bot sedang berjalan...")
     await application.run_polling()
