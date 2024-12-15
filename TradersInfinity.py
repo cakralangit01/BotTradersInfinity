@@ -17,7 +17,7 @@ async def check_operating_hours(application):
         if not (start_time <= now or now < end_time):
             print("Di luar jam operasional. Bot berhenti.")
             await application.shutdown()  # Gunakan await untuk menunggu shutdown
-            return
+            break  # Keluar dari loop setelah shutdown
         await asyncio.sleep(60)
 
 # Fungsi untuk forward pesan teks
@@ -55,11 +55,16 @@ async def run_bot():
     application = Application.builder().token(TOKEN).build()
     application.add_handler(MessageHandler(TEXT & ~COMMAND, forward_text))
     application.add_handler(MessageHandler(PHOTO | VIDEO | DOCUMENT, forward_media))
+    
+    # Jalankan pengecekan jam operasional di task terpisah
     asyncio.create_task(check_operating_hours(application))
+    
     print("Bot sedang berjalan...")
+    
+    # Menjalankan bot dalam polling
     await application.run_polling()
 
-# Perbaikan event loop
+# Fungsi utama untuk inisialisasi
 async def main():
     try:
         await run_bot()  # Jangan gunakan asyncio.run() di dalam async function
