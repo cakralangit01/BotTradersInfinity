@@ -2,7 +2,7 @@ from telegram.ext import Application, MessageHandler, filters
 
 # Masukkan token API dari BotFather
 TOKEN = "7277874066:AAF5qxzfX3fYRVaHl6vKpPVdD9GSg1nBZlU"
-CHANNEL_ID = "@Ch_TradersInfinity"  # Ganti dengan username channel kamu
+CHANNEL_ID = "@Traders_Infinity"  # Ganti dengan username channel kamu
 
 # Fungsi untuk meneruskan pesan teks ke channel
 async def forward_text(update, context):
