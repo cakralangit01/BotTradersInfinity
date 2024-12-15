@@ -1,22 +1,26 @@
 from telegram.ext import Application, MessageHandler, filters
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import asyncio
+import pytz
 import sys
 
 # Masukkan token API dari BotFather
 TOKEN = "7277874066:AAF5qxzfX3fYRVaHl6vKpPVdD9GSg1nBZlU"
 CHANNEL_ID = "@Traders_Infinity"  # Ganti dengan username channel kamu
 
+# Tentukan zona waktu WIB
+WIB = pytz.timezone("Asia/Jakarta")
+
 # Fungsi untuk mengecek jam operasional
 async def check_operating_hours(application):
     while True:
-        now = datetime.now().time()
-        start_time = time(9, 0)  # 09:00
-        end_time = time(0, 0)    # 00:00
+        now = datetime.now(WIB).time()  # Dapatkan waktu saat ini dalam zona WIB
+        start_time = time(9, 0)  # 09:00 WIB
+        end_time = time(0, 0)  # 24:00 WIB (tengah malam)
 
-        # Cek apakah di luar jam operasional
+        # Jika di luar jam operasional, bot akan berhenti
         if not (start_time <= now or now < end_time):
-            print("Di luar jam operasional. Bot akan berhenti.")
+            print("Di luar jam operasional (WIB). Bot akan berhenti.")
             await application.shutdown()  # Shutdown aplikasi bot
             sys.exit()  # Keluar dari program
         await asyncio.sleep(60)  # Cek setiap 60 detik
@@ -52,7 +56,7 @@ async def forward_media(update, context):
         print(f"Error mengirim media: {e}")
 
 # Fungsi utama untuk menjalankan bot
-async def main():
+async def run_bot():
     application = Application.builder().token(TOKEN).build()
 
     # Tambahkan handler untuk teks
@@ -67,9 +71,13 @@ async def main():
     print("Bot sedang berjalan...")
     await application.run_polling()
 
-# Eksekusi fungsi utama
-if __name__ == "__main__":
+# Fungsi utama untuk inisialisasi
+def main():
     try:
-        asyncio.run(main())
+        asyncio.run(run_bot())
     except RuntimeError as e:
         print(f"RuntimeError: {e}")
+
+# Eksekusi fungsi utama
+if __name__ == "__main__":
+    main()
