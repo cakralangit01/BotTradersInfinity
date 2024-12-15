@@ -1,8 +1,25 @@
 from telegram.ext import Application, MessageHandler, filters
+from datetime import datetime
+import asyncio
+import sys
 
 # Masukkan token API dari BotFather
 TOKEN = "7277874066:AAF5qxzfX3fYRVaHl6vKpPVdD9GSg1nBZlU"
 CHANNEL_ID = "@Traders_Infinity"  # Ganti dengan username channel kamu
+
+# Fungsi untuk mengecek jam operasional
+async def check_operating_hours(application):
+    while True:
+        current_time = datetime.now().time()  # Ambil waktu sekarang
+        start_time = datetime.strptime("09:00", "%H:%M").time()
+        end_time = datetime.strptime("00:00", "%H:%M").time()
+
+        # Cek apakah bot di luar jam operasional
+        if not (start_time <= current_time or current_time < end_time):
+            print("Di luar jam operasional. Bot akan berhenti.")
+            application.stop()  # Hentikan aplikasi bot
+            sys.exit()  # Keluar dari program
+        await asyncio.sleep(60)  # Cek setiap 60 detik
 
 # Fungsi untuk meneruskan pesan teks ke channel
 async def forward_text(update, context):
@@ -50,6 +67,9 @@ def main():
 
     # Tambahkan handler untuk media (foto, video, file)
     application.add_handler(MessageHandler(filters.PHOTO | filters.VIDEO | filters.ATTACHMENT, forward_media))
+
+    # Jalankan pengecekan jam operasional secara paralel
+    application.create_task(check_operating_hours(application))
 
     # Mulai polling untuk menerima pesan
     print("Bot sedang berjalan...")
