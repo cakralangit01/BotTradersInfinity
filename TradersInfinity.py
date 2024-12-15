@@ -1,5 +1,5 @@
 from telegram.ext import Application, MessageHandler
-from telegram.ext.filters import PHOTO, VIDEO, DOCUMENT, TEXT, COMMAND
+from telegram.ext.filters import PHOTO, VIDEO, TEXT, COMMAND, Document
 from datetime import datetime, time
 import asyncio
 import pytz
@@ -63,7 +63,8 @@ async def run_bot():
     application.add_handler(MessageHandler(TEXT & ~COMMAND, forward_text))
 
     # Tambahkan handler untuk media
-    application.add_handler(MessageHandler(PHOTO | VIDEO | DOCUMENT, forward_media))
+    media_filter = PHOTO | VIDEO | Document.ALL
+    application.add_handler(MessageHandler(media_filter, forward_media))
 
     # Jalankan pengecekan jam operasional secara paralel
     asyncio.create_task(check_operating_hours(application))
