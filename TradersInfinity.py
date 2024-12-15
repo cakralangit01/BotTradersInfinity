@@ -1,71 +1,60 @@
-from telegram.ext import Application, MessageHandler
-from telegram.ext.filters import PHOTO, VIDEO, TEXT, COMMAND, Document
-from datetime import datetime, time
-import pytz
-import asyncio
+from telegram.ext import Application, MessageHandler, filters
 
-TOKEN = "TOKEN_KAMU"
-CHANNEL_ID = "@Traders_Infinity"
-WIB = pytz.timezone("Asia/Jakarta")
+# Masukkan token API dari BotFather
+TOKEN = "7277874066:AAF5qxzfX3fYRVaHl6vKpPVdD9GSg1nBZlU"
+CHANNEL_ID = "@Traders_Infinity"  # Ganti dengan username channel kamu
 
-# Fungsi cek jam operasional
-async def check_operating_hours(application):
-    while True:
-        now = datetime.now(WIB).time()
-        start_time = time(9, 0)
-        end_time = time(0, 0)
-        if not (start_time <= now or now < end_time):
-            print("Di luar jam operasional. Bot berhenti.")
-            # Pastikan bot shutdown setelah polling selesai
-            await application.stop()  # Hentikan polling, lalu shutdown
-            break  # Keluar dari loop setelah shutdown
-        await asyncio.sleep(60)
-
-# Fungsi untuk forward pesan teks
+# Fungsi untuk meneruskan pesan teks ke channel
 async def forward_text(update, context):
     try:
-        message = update.message.text
-        await context.bot.send_message(chat_id=CHANNEL_ID, text=message)
-        print(f"Teks diteruskan: {message}")
+        message = update.message.text  # Ambil teks dari pesan pengguna
+        await context.bot.send_message(chat_id=CHANNEL_ID, text=message)  # Kirim teks ke channel
+        print(f"Teks diteruskan ke channel: {message}")
     except Exception as e:
-        print(f"Error kirim teks: {e}")
+        print(f"Error mengirim teks: {e}")
 
-# Fungsi untuk forward media
+# Fungsi untuk meneruskan gambar, video, atau file ke channel
 async def forward_media(update, context):
     try:
+        # Jika ada foto
         if update.message.photo:
-            photo_file = update.message.photo[-1].file_id
-            caption = update.message.caption or ""
+            photo_file = update.message.photo[-1].file_id  # Ambil foto resolusi tertinggi
+            caption = update.message.caption or ""  # Ambil caption jika ada
             await context.bot.send_photo(chat_id=CHANNEL_ID, photo=photo_file, caption=caption)
-            print("Gambar diteruskan.")
+            print("Gambar diteruskan ke channel.")
+        
+        # Jika ada video
         elif update.message.video:
             video_file = update.message.video.file_id
             caption = update.message.caption or ""
             await context.bot.send_video(chat_id=CHANNEL_ID, video=video_file, caption=caption)
-            print("Video diteruskan.")
+            print("Video diteruskan ke channel.")
+        
+        # Jika ada file/dokumen
         elif update.message.document:
             document_file = update.message.document.file_id
             caption = update.message.caption or ""
             await context.bot.send_document(chat_id=CHANNEL_ID, document=document_file, caption=caption)
-            print("Dokumen diteruskan.")
+            print("Dokumen diteruskan ke channel.")
+        
     except Exception as e:
-        print(f"Error kirim media: {e}")
+        print(f"Error mengirim media: {e}")
 
-# Fungsi utama
-async def run_bot():
+# Fungsi utama untuk menjalankan bot
+def main():
+    # Inisialisasi aplikasi bot
     application = Application.builder().token(TOKEN).build()
-    application.add_handler(MessageHandler(TEXT & ~COMMAND, forward_text))
-    application.add_handler(MessageHandler(PHOTO | VIDEO | Document.ALL, forward_media))
-    asyncio.create_task(check_operating_hours(application))
+
+    # Tambahkan handler untuk teks
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, forward_text))
+
+    # Tambahkan handler untuk media (foto, video, file)
+    application.add_handler(MessageHandler(filters.PHOTO | filters.VIDEO | filters.ATTACHMENT, forward_media))
+
+    # Mulai polling untuk menerima pesan
     print("Bot sedang berjalan...")
-    await application.run_polling()
+    application.run_polling()
 
-# Perbaikan event loop
-async def main():
-    try:
-        await run_bot()  # Jangan gunakan asyncio.run() di dalam async function
-    except RuntimeError as e:
-        print(f"RuntimeError: {e}")
-
+# Eksekusi fungsi utama jika file dijalankan langsung
 if __name__ == "__main__":
-    asyncio.run(main())  # Memanggil main() menggunakan asyncio.run() untuk menjalankan semuanya
+    main()
