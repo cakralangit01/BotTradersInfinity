@@ -17,7 +17,7 @@ async def check_operating_hours(application):
         # Cek apakah bot di luar jam operasional
         if not (start_time <= current_time or current_time < end_time):
             print("Di luar jam operasional. Bot akan berhenti.")
-            application.stop()  # Hentikan aplikasi bot
+            await application.stop()  # Hentikan aplikasi bot
             sys.exit()  # Keluar dari program
         await asyncio.sleep(60)  # Cek setiap 60 detik
 
@@ -58,7 +58,7 @@ async def forward_media(update, context):
         print(f"Error mengirim media: {e}")
 
 # Fungsi utama untuk menjalankan bot
-def main():
+async def main():
     # Inisialisasi aplikasi bot
     application = Application.builder().token(TOKEN).build()
 
@@ -69,12 +69,12 @@ def main():
     application.add_handler(MessageHandler(filters.PHOTO | filters.VIDEO | filters.ATTACHMENT, forward_media))
 
     # Jalankan pengecekan jam operasional secara paralel
-    application.create_task(check_operating_hours(application))
+    asyncio.create_task(check_operating_hours(application))
 
     # Mulai polling untuk menerima pesan
     print("Bot sedang berjalan...")
-    application.run_polling()
+    await application.run_polling()
 
 # Eksekusi fungsi utama jika file dijalankan langsung
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
